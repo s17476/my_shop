@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/providers/product.dart';
 
-class ProductsProvider with ChangeNotifier {
+class Products with ChangeNotifier {
   final List<Product> _items = [
     Product(
       id: 'p1',
@@ -51,12 +51,31 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  void addProduct() {
-    // _items.add(value);
+//gets a product object with empty ID
+  void addProduct(Product product) {
+    final newProduct = Product(
+      id: DateTime.now().toString(),
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      imageUrl: product.imageUrl,
+    );
+    _items.add(newProduct);
+    notifyListeners();
+  }
+
+  void updateProduct(Product product) {
+    final index = _items.indexWhere((element) => element.id == product.id);
+    _items[index] = product;
     notifyListeners();
   }
 
   Product findById(String id) {
     return _items.firstWhere((element) => element.id == id);
+  }
+
+  void deleteProduct(Product product) {
+    _items.removeWhere((element) => element.id == product.id);
+    notifyListeners();
   }
 }

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/providers/cart.dart';
 import 'package:my_shop/providers/orders.dart';
-import 'package:my_shop/providers/products_provider.dart';
+import 'package:my_shop/providers/products.dart';
 import 'package:my_shop/screens/cart_screen.dart';
+import 'package:my_shop/screens/edit_product_screen.dart';
 import 'package:my_shop/screens/orders_screen.dart';
 import 'package:my_shop/screens/product_detail_screen.dart';
 import 'package:my_shop/screens/products_overview.dart';
+import 'package:my_shop/screens/user_products_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -20,7 +22,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => ProductsProvider(),
+          create: (ctx) => Products(),
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
@@ -37,12 +39,19 @@ class MyApp extends StatelessWidget {
                   fontSize: 22,
                   color: Colors.white,
                 ),
+                headline5: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                ),
               ),
           primarySwatch: Colors.purple,
           colorScheme: Theme.of(context).colorScheme.copyWith(
                 secondary: Colors.deepOrange,
               ),
           fontFamily: 'Lato',
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.purple,
+          ),
         ),
         home: const ProductOverviewScreen(),
         debugShowCheckedModeBanner: false,
@@ -50,6 +59,8 @@ class MyApp extends StatelessWidget {
           ProductDetailScreen.routeName: (ctx) => const ProductDetailScreen(),
           CartScreen.routeName: (ctx) => const CartScreen(),
           OredersScreen.routeName: (ctx) => const OredersScreen(),
+          UserProductsScreen.routeName: (ctx) => const UserProductsScreen(),
+          EditProduct.routeName: (ctx) => const EditProduct(),
         },
       ),
     );
