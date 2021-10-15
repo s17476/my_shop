@@ -1,42 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:my_shop/providers/product.dart';
+import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
-  final List<Product> _items = [
-    Product(
-      id: 'p1',
-      title: 'Red Shirt',
-      description: 'A red shirt - it is pretty red!',
-      price: 29.99,
-      imageUrl:
-          'https://cdn.pixabay.com/photo/2016/10/02/22/17/red-t-shirt-1710578_1280.jpg',
-    ),
-    Product(
-      id: 'p2',
-      title: 'Trousers',
-      description: 'A nice pair of trousers.',
-      price: 59.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
-    ),
-    Product(
-      id: 'p3',
-      title: 'Yellow Scarf',
-      description: 'Warm and cozy - exactly what you need for the winter.',
-      price: 19.99,
-      imageUrl:
-          'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    ),
-    Product(
-      id: 'p4',
-      title: 'A Pan',
-      description: 'Prepare any meal you want.',
-      price: 49.99,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
-    ),
-  ];
+  final _productsUrl = Uri.parse(
+      'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products.json');
+
+  List<Product> _items = [];
 
   // var showFavoritesOnly = false;
 
@@ -51,23 +23,88 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-//gets a product object with empty ID
-  void addProduct(Product product) {
-    final newProduct = Product(
-      id: DateTime.now().toString(),
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      imageUrl: product.imageUrl,
-    );
-    _items.add(newProduct);
-    notifyListeners();
+  Future<void> fetchAndSetProducts() async {
+    try {
+      List<Product> tmpList = [];
+      final response = await http.get(_productsUrl);
+      // print(json.decode(response.body));
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      extractedData.forEach((key, value) {
+        tmpList.add(
+          Product(
+            id: key,
+            title: value['title'],
+            description: value['description'],
+            price: value['price'],
+            imageUrl: value['imageUrl'],
+            isFavorite: value['isFavorite'],
+          ),
+        );
+      });
+      _items = tmpList;
+      notifyListeners();
+    } catch (error) {
+      rethrow;
+    }
   }
 
-  void updateProduct(Product product) {
-    final index = _items.indexWhere((element) => element.id == product.id);
-    _items[index] = product;
-    notifyListeners();
+//gets a product object with empty ID
+  Future<void> addProduct(Product product) async {
+    final jsonProduct = json.encode(
+      {
+        'title': product.title,
+        'description': product.description,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+        'isFavorite': product.isFavorite,
+      },
+    );
+
+    try {
+      final response = await http.post(
+        _productsUrl,
+        body: jsonProduct,
+      );
+
+      final newProduct = Product(
+        id: json.decode(response.body)['name'],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      );
+      _items.add(newProduct);
+      notifyListeners();
+    } catch (error) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateProduct(Product product) async {
+    final jsonUpdatedProduct = json.encode(
+      {
+        'title': product.title,
+        'description': product.description,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+      },
+    );
+    print(product.id);
+    final _productByIdUrl = Uri.parse(
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json');
+    try {
+      await http.patch(
+        _productByIdUrl,
+        body: jsonUpdatedProduct,
+      );
+
+      final index = _items.indexWhere((element) => element.id == product.id);
+      _items[index] = product;
+      notifyListeners();
+    } catch (error) {
+      print('E   ' + error.toString());
+      rethrow;
+    }
   }
 
   Product findById(String id) {
