@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:my_shop/models/http_exception.dart';
 import 'dart:convert';
 import 'package:my_shop/providers/product.dart';
 import 'package:http/http.dart' as http;
@@ -89,7 +90,6 @@ class Products with ChangeNotifier {
         'imageUrl': product.imageUrl,
       },
     );
-    print(product.id);
     final _productByIdUrl = Uri.parse(
         'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json');
     try {
@@ -102,7 +102,6 @@ class Products with ChangeNotifier {
       _items[index] = product;
       notifyListeners();
     } catch (error) {
-      print('E   ' + error.toString());
       rethrow;
     }
   }
@@ -111,8 +110,22 @@ class Products with ChangeNotifier {
     return _items.firstWhere((element) => element.id == id);
   }
 
-  void deleteProduct(Product product) {
-    _items.removeWhere((element) => element.id == product.id);
+  Future<void> deleteProduct(Product product) async {
+    final _productByIdUrl = Uri.parse(
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json');
+    Product? existingProduct = product;
+    final existingProductIndex =
+        _items.indexWhere((element) => element.id == product.id);
+
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+
+    final res = await http.delete(_productByIdUrl);
+    if (res.statusCode >= 400) {
+      items.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException(statusCode: res.statusCode);
+    }
+    existingProduct = null;
   }
 }

@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 
 class UserProductItem extends StatelessWidget {
   final Product product;
+  final BuildContext bCtx;
 
-  const UserProductItem({Key? key, required this.product}) : super(key: key);
+  const UserProductItem({Key? key, required this.product, required this.bCtx})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +48,9 @@ class UserProductItem extends StatelessWidget {
               color: Theme.of(context).primaryColor,
             ),
             IconButton(
-              onPressed: () {
-                var confirm = showDialog(
+              onPressed: () async {
+                String msg = '';
+                await showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Are you sure?'),
@@ -75,18 +78,30 @@ class UserProductItem extends StatelessWidget {
                       ),
                     ],
                   ),
-                ).then((value) {
-                  if (value) {
-                    Provider.of<Products>(context, listen: false)
-                        .deleteProduct(product);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            Text('${product.title} is removed from the list.'),
-                      ),
-                    );
-                  }
-                });
+                ).then(
+                  (value) async {
+                    if (value) {
+                      await Provider.of<Products>(context, listen: false)
+                          .deleteProduct(product)
+                          .then(
+                        (_) {
+                          msg = '${product.title} deleted successfull.';
+                        },
+                      ).catchError(
+                        (_) {
+                          msg = '${product.title} deleting error';
+                        },
+                      );
+                    }
+                  },
+                );
+                if (msg.isNotEmpty) {
+                  ScaffoldMessenger.of(bCtx).showSnackBar(
+                    SnackBar(
+                      content: Text(msg),
+                    ),
+                  );
+                }
               },
               icon: const Icon(
                 Icons.delete,

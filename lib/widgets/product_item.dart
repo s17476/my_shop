@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:my_shop/models/cart_item.dart';
 import 'package:my_shop/providers/product.dart';
 import 'package:my_shop/providers/cart.dart';
 import 'package:my_shop/screens/product_detail_screen.dart';
@@ -33,10 +32,28 @@ class ProductItem extends StatelessWidget {
               Navigator.of(context).pushNamed(ProductDetailScreen.routeName,
                   arguments: product.id);
             },
-            child: Image.network(
-              product.imageUrl,
-              fit: BoxFit.cover,
-            ),
+            child: Stack(children: [
+              Image.network(
+                product.imageUrl,
+                alignment: Alignment.center,
+                height: double.infinity,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.only(bottomRight: Radius.circular(15)),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  color: Colors.black54,
+                  child: Text(
+                    product.title,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              )
+            ]),
           ),
           footer: GridTileBar(
             backgroundColor: Colors.black87,
@@ -49,7 +66,7 @@ class ProductItem extends StatelessWidget {
                   color: Theme.of(context).colorScheme.secondary,
                 )),
             title: Text(
-              product.title,
+              '\$${product.price.toString()}',
               textAlign: TextAlign.center,
             ),
             trailing: IconButton(

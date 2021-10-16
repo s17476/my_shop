@@ -56,6 +56,7 @@ class UserProductsScreen extends StatelessWidget {
               children: [
                 UserProductItem(
                   product: productsData.items[i],
+                  bCtx: context,
                 ),
                 const Divider(),
               ],
