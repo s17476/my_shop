@@ -96,6 +96,7 @@ class UserProductItem extends StatelessWidget {
                   },
                 );
                 if (msg.isNotEmpty) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(bCtx).showSnackBar(
                     SnackBar(
                       content: Text(msg),

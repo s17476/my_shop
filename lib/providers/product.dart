@@ -19,6 +19,15 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
+  Product.ordersScreenBuilder({
+    this.id = '',
+    required this.title,
+    this.description = '',
+    required this.price,
+    this.imageUrl = '',
+    this.isFavorite = false,
+  });
+
   void toggleFavoriteStatus() async {
     final oldStatus = isFavorite;
     isFavorite = !isFavorite;
