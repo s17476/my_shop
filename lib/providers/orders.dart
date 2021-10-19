@@ -10,14 +10,20 @@ import 'package:my_shop/providers/product.dart';
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
 
-  final _ordersUrl = Uri.parse(
-      'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/orders.json');
+  String? authToken;
+  String? userId;
+
+  Orders();
+
+  Orders.auth(this.authToken, this.userId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
   }
 
   Future<void> fetchAndSetOrders() async {
+    final _ordersUrl = Uri.parse(
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/users/$userId/orders.json?auth=$authToken');
     final response = await http.get(_ordersUrl);
     if (response.body == 'null') {
       return;
@@ -49,6 +55,8 @@ class Orders with ChangeNotifier {
 
   Future<void> addOrder(List<CartItem> cartItems, double totalAmount) async {
     final timeStamp = DateTime.now();
+    final _ordersUrl = Uri.parse(
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/users/$userId/orders.json?auth=$authToken');
     try {
       final response = await http.post(
         _ordersUrl,
@@ -59,7 +67,7 @@ class Orders with ChangeNotifier {
             'products': cartItems
                 .map(
                   (item) => {
-                    'id': item.id,
+                    'id': item.product.id,
                     'title': item.product.title,
                     'quantity': item.quantity,
                     'price': item.product.price,

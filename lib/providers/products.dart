@@ -6,10 +6,14 @@ import 'package:my_shop/providers/product.dart';
 import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
-  final _productsUrl = Uri.parse(
-      'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products.json');
-
   List<Product> _items = [];
+
+  String? token;
+  String? userId;
+
+  Products();
+
+  Products.auth(this.token, this.userId, this._items);
 
   // var showFavoritesOnly = false;
 
@@ -24,15 +28,29 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
     try {
+      final filterString =
+          filterByUser ? 'orderBy="ownerId"&equalTo="$userId"' : '';
+      final productsUrl = Uri.parse(
+          'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$token&$filterString');
       List<Product> tmpList = [];
-      final response = await http.get(_productsUrl);
+      final response = await http.get(productsUrl);
       if (response.body == 'null') {
         return;
       }
+      final favoriteUrl = Uri.parse(
+          'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/users/$userId/favorites.json?auth=$token');
+      final favoriteResponse = await http.get(favoriteUrl);
+      final favoriteData = json.decode(favoriteResponse.body);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
       extractedData.forEach((key, value) {
+        // print('key ' + key);
+        // print('title ' + value['title']);
+        // print('description ' + value['description']);
+        // print('price ' + value['price']);
+        // print('img ' + value['imageUrl']);
+        // print('isFavorite ' + value['isFavorite']);
         tmpList.add(
           Product(
             id: key,
@@ -40,7 +58,8 @@ class Products with ChangeNotifier {
             description: value['description'],
             price: value['price'],
             imageUrl: value['imageUrl'],
-            isFavorite: value['isFavorite'],
+            isFavorite:
+                favoriteData == null ? false : favoriteData[key] ?? false,
           ),
         );
       });
@@ -53,17 +72,20 @@ class Products with ChangeNotifier {
 
 //gets a product object with empty ID
   Future<void> addProduct(Product product) async {
-    final jsonProduct = json.encode(
-      {
-        'title': product.title,
-        'description': product.description,
-        'price': product.price,
-        'imageUrl': product.imageUrl,
-        'isFavorite': product.isFavorite,
-      },
-    );
-
     try {
+      final jsonProduct = json.encode(
+        {
+          'title': product.title,
+          'description': product.description,
+          'price': product.price,
+          'imageUrl': product.imageUrl,
+          // 'isFavorite': product.isFavorite,
+        },
+      );
+
+      final _productsUrl = Uri.parse(
+          'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=$token');
+
       final response = await http.post(
         _productsUrl,
         body: jsonProduct,
@@ -90,10 +112,11 @@ class Products with ChangeNotifier {
         'description': product.description,
         'price': product.price,
         'imageUrl': product.imageUrl,
+        'ownerId': userId,
       },
     );
     final _productByIdUrl = Uri.parse(
-        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json');
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json?auth=$token');
     try {
       await http.patch(
         _productByIdUrl,
@@ -114,7 +137,7 @@ class Products with ChangeNotifier {
 
   Future<void> deleteProduct(Product product) async {
     final _productByIdUrl = Uri.parse(
-        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json');
+        'https://flutter-myshop-49e90-default-rtdb.europe-west1.firebasedatabase.app/products/${product.id}.json?auth=$token');
     Product? existingProduct = product;
     final existingProductIndex =
         _items.indexWhere((element) => element.id == product.id);
