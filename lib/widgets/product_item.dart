@@ -35,12 +35,17 @@ class ProductItem extends StatelessWidget {
                   arguments: product.id);
             },
             child: Stack(children: [
-              Image.network(
-                product.imageUrl,
-                alignment: Alignment.center,
-                height: double.infinity,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              Hero(
+                tag: product.id,
+                child: FadeInImage(
+                  image: NetworkImage(product.imageUrl),
+                  placeholder:
+                      const AssetImage('assets/images/product-placeholder.png'),
+                  height: double.infinity,
+                  width: double.infinity,
+                  alignment: Alignment.center,
+                  fit: BoxFit.cover,
+                ),
               ),
               ClipRRect(
                 borderRadius:
